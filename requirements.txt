@@ -8,3 +8,4 @@ pydantic-core==2.18.2
 python-dotenv==1.0.1
 gunicorn==22.0.0
 sqladmin==0.16.1
+python-jose[cryptography]==3.3.0
