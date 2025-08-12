@@ -1,32 +1,41 @@
 from fastapi import FastAPI
-from app.api.endpoints import products, prices, inventory, users, shopping_lists, favorites, sale_alerts, notifications, search, data_collection_router
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+ 
+# Your routers (unchanged)
+from app.api.endpoints import (
+    products, prices, inventory, users, shopping_lists, favorites,
+    sale_alerts, notifications, search, data_collection_router
+)
+ 
 from sqladmin import Admin, ModelView
-from app.db.session import engine
 from app.db import models
-from fastapi import Depends, Request
-from starlette.responses import RedirectResponse
-from starlette.status import HTTP_302_FOUND
-from app.api.endpoints.categories_admin import admin_categories_bp
-from flask import Flask
-
-app = FastAPI() if 'FastAPI' in globals() else Flask(__name__)
-
-# Include routers
-app.include_router(products.router, prefix="/products", tags=["Products"])
-app.include_router(prices.router, prefix="/prices", tags=["Prices"])
-app.include_router(inventory.router, prefix="/inventory", tags=["Inventory"])
-app.include_router(users.router, prefix="/users", tags=["Users"])
-app.include_router(shopping_lists.router, prefix="/shopping-lists", tags=["Shopping Lists"])
-app.include_router(favorites.router, prefix="/favorites", tags=["Favorites"])
-app.include_router(sale_alerts.router, prefix="/sale-alerts", tags=["Sale Alerts"])
-app.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
-app.include_router(search.router, prefix="/search", tags=["Search"])
-app.include_router(data_collection_router, prefix="/data-collection", tags=["Data Collection"])
-# app.register_blueprint(admin_categories_bp)
-
-# --- SQLAdmin setup ---
-
-# Register all models with SQLAdmin
+from app.db.session import engine  # engine uses env DATABASE_URL with sslmode=require
+ 
+app = FastAPI(title="Price Comparison API")
+ 
+# Relaxed CORS for now — after it works, replace "*" with your SWA domain
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],          # TODO: ["https://<your-swa>.azurestaticapps.net"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+ 
+# Routers
+app.include_router(products.router,         prefix="/products",         tags=["Products"])
+app.include_router(prices.router,           prefix="/prices",           tags=["Prices"])
+app.include_router(inventory.router,        prefix="/inventory",        tags=["Inventory"])
+app.include_router(users.router,            prefix="/users",            tags=["Users"])
+app.include_router(shopping_lists.router,   prefix="/shopping-lists",   tags=["Shopping Lists"])
+app.include_router(favorites.router,        prefix="/favorites",        tags=["Favorites"])
+app.include_router(sale_alerts.router,      prefix="/sale-alerts",      tags=["Sale Alerts"])
+app.include_router(notifications.router,    prefix="/notifications",    tags=["Notifications"])
+app.include_router(search.router,           prefix="/search",           tags=["Search"])
+app.include_router(data_collection_router,  prefix="/data-collection",  tags=["Data Collection"])
+ 
+# --- SQLAdmin views (unchanged) ---
 class UserAdmin(ModelView, model=models.User):
     column_list = [c.name for c in models.User.__table__.columns]
 class SessionAdmin(ModelView, model=models.Session):
@@ -57,7 +66,7 @@ class SaleAlertAdmin(ModelView, model=models.SaleAlert):
     column_list = [c.name for c in models.SaleAlert.__table__.columns]
 class NotificationAdmin(ModelView, model=models.Notification):
     column_list = [c.name for c in models.Notification.__table__.columns]
-
+ 
 admin = Admin(app, engine)
 admin.add_view(UserAdmin)
 admin.add_view(SessionAdmin)
@@ -74,12 +83,16 @@ admin.add_view(ShoppingListItemAdmin)
 admin.add_view(FavoriteAdmin)
 admin.add_view(SaleAlertAdmin)
 admin.add_view(NotificationAdmin)
-# --- End SQLAdmin setup ---
-
+# --- end SQLAdmin ---
+ 
 @app.get("/", tags=["Root"])
 def read_root():
     return {"message": "Price Comparison API is running!"}
-  
-  
-if __name__ == "__main__":
-    app.run(debug=True)
+ 
+@app.get("/health", tags=["Health"])
+def health():
+    # simple DB liveness check
+    from app.db.session import engine as db_engine
+    with db_engine.connect() as conn:
+        conn.execute(text("SELECT 1"))
+    return {"status": "ok"}
