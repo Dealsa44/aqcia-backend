@@ -27,6 +27,31 @@ class CategoryUpdate(CategoryBase):
 
 class CategoryOut(CategoryBase):
     id: int
+    
+    model_config = {"from_attributes": True}
 
-    class Config:
-        orm_mode = True
+# --- Subcategory Schemas ---
+
+class SubcategoryBase(BaseModel):
+    name: str
+    name_ka: Optional[str] = None
+    name_en: Optional[str] = None
+    name_ru: Optional[str] = None
+    icon: Optional[str] = None
+    category_id: int
+
+class SubcategoryCreate(SubcategoryBase):
+    pass
+
+class SubcategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    name_ka: Optional[str] = None
+    name_en: Optional[str] = None
+    name_ru: Optional[str] = None
+    icon: Optional[str] = None
+    category_id: Optional[int] = None
+
+class SubcategoryOut(SubcategoryBase):
+    id: int
+    
+    model_config = {"from_attributes": True}

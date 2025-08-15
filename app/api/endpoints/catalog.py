@@ -3,8 +3,11 @@ from sqlalchemy.orm import Session
 from app.db import session as db_session, models
 from app.schemas import product_schemas
 from typing import List
-from app.schemas.catalog_schemas import CategoryOut, CategoryCreate, CategoryUpdate
-from app.db.models import Category
+from app.schemas.catalog_schemas import (
+    CategoryOut, CategoryCreate, CategoryUpdate,
+    SubcategoryOut, SubcategoryCreate, SubcategoryUpdate,
+)
+from app.db.models import Category, Subcategory
 
 router = APIRouter()
 
@@ -63,3 +66,48 @@ def delete_category(id: int, db: Session = Depends(db_session.get_db)):
     db.delete(db_category)
     db.commit()
     return {"detail": "Category deleted"}
+
+# --- Subcategory Endpoints ---
+
+@router.get("/subcategories", response_model=List[SubcategoryOut])
+def get_all_subcategories(db: Session = Depends(db_session.get_db)):
+    return db.query(Subcategory).all()
+
+@router.get("/subcategories/{id}", response_model=SubcategoryOut)
+def get_subcategory(id: int, db: Session = Depends(db_session.get_db)):
+    subcategory = db.query(Subcategory).filter(Subcategory.id == id).first()
+    if not subcategory:
+        raise HTTPException(status_code=404, detail="Subcategory not found")
+    return subcategory
+
+@router.get("/categories/{category_id}/subcategories", response_model=List[SubcategoryOut])
+def get_subcategories_for_category(category_id: int, db: Session = Depends(db_session.get_db)):
+    return db.query(Subcategory).filter(Subcategory.category_id == category_id).all()
+
+@router.post("/subcategories", response_model=SubcategoryOut)
+def create_subcategory(subcategory: SubcategoryCreate, db: Session = Depends(db_session.get_db)):
+    db_subcategory = Subcategory(**subcategory.dict())
+    db.add(db_subcategory)
+    db.commit()
+    db.refresh(db_subcategory)
+    return db_subcategory
+
+@router.put("/subcategories/{id}", response_model=SubcategoryOut)
+def update_subcategory(id: int, subcategory: SubcategoryUpdate, db: Session = Depends(db_session.get_db)):
+    db_subcategory = db.query(Subcategory).filter(Subcategory.id == id).first()
+    if not db_subcategory:
+        raise HTTPException(status_code=404, detail="Subcategory not found")
+    for field, value in subcategory.dict(exclude_unset=True).items():
+        setattr(db_subcategory, field, value)
+    db.commit()
+    db.refresh(db_subcategory)
+    return db_subcategory
+
+@router.delete("/subcategories/{id}", response_model=dict)
+def delete_subcategory(id: int, db: Session = Depends(db_session.get_db)):
+    db_subcategory = db.query(Subcategory).filter(Subcategory.id == id).first()
+    if not db_subcategory:
+        raise HTTPException(status_code=404, detail="Subcategory not found")
+    db.delete(db_subcategory)
+    db.commit()
+    return {"detail": "Subcategory deleted"}

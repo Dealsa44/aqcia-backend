@@ -5,7 +5,7 @@ from sqlalchemy import text
 # Your routers (unchanged)
 from app.api.endpoints import (
     products, prices, inventory, users, shopping_lists, favorites,
-    sale_alerts, notifications, search, data_collection_router
+    sale_alerts, notifications, search, data_collection_router, catalog_router
 )
  
 from sqladmin import Admin, ModelView
@@ -34,6 +34,7 @@ app.include_router(sale_alerts.router,      prefix="/sale-alerts",      tags=["S
 app.include_router(notifications.router,    prefix="/notifications",    tags=["Notifications"])
 app.include_router(search.router,           prefix="/search",           tags=["Search"])
 app.include_router(data_collection_router,  prefix="/data-collection",  tags=["Data Collection"])
+app.include_router(catalog_router,          prefix="/catalog",          tags=["Categories & Subcategories"])
  
 # --- SQLAdmin views (unchanged) ---
 class UserAdmin(ModelView, model=models.User):
