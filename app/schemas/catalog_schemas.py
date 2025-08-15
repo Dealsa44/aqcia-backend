@@ -18,6 +18,7 @@ class CategoryBase(BaseModel):
     name_en: str
     name_ru: str
     icon: Optional[str] = None
+    api_category_id: Optional[int] = None
 
 class CategoryCreate(CategoryBase):
     pass
@@ -38,6 +39,7 @@ class SubcategoryBase(BaseModel):
     name_en: Optional[str] = None
     name_ru: Optional[str] = None
     icon: Optional[str] = None
+    api_subcategory_id: Optional[int] = None
     category_id: int
 
 class SubcategoryCreate(SubcategoryBase):

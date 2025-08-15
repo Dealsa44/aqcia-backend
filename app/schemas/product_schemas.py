@@ -4,15 +4,16 @@ from datetime import datetime
 
 class ProductBase(BaseModel):
     name: str
-    brand: str
-    size: str
-    price: float
+    brand: Optional[str] = None
+    api_product_id: Optional[int] = None
+    bar_code: Optional[str] = None
+    image_url: Optional[str] = None
+    subcategory_id: Optional[int] = None
 
 class ProductCreate(ProductBase):
     pass
 
 class Product(ProductBase):
-    id: int
     product_id: int
     model_config = {"from_attributes": True}
 
