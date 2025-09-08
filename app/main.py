@@ -146,3 +146,22 @@ def debug_info():
         "app_title": "Price Comparison API",
         "environment": "production"
     }
+
+@app.get("/test-redirect", tags=["Debug"])
+def test_redirect():
+    logger.info("🔄 Test redirect endpoint accessed")
+    return {"message": "No redirect happening", "status": "ok"}
+
+@app.get("/test-products", tags=["Debug"])
+def test_products():
+    logger.info("🛍️ Test products endpoint accessed")
+    try:
+        from app.api.endpoints.products import get_products
+        from app.db.session import get_db
+        db = next(get_db())
+        result = get_products(skip=0, limit=5, db=db)
+        logger.info(f"✅ Test products successful: {len(result)} products")
+        return {"message": "Products endpoint working", "count": len(result), "status": "ok"}
+    except Exception as e:
+        logger.error(f"❌ Test products failed: {str(e)}")
+        return {"message": "Products endpoint failed", "error": str(e), "status": "error"}
