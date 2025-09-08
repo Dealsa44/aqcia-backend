@@ -1,6 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
+import logging
+import time
  
 # Your routers (unchanged)
 from app.api.endpoints import (
@@ -13,6 +15,29 @@ from app.db import models
 from app.db.session import engine  # engine uses env DATABASE_URL with sslmode=require
  
 app = FastAPI(title="Price Comparison API")
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Add request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    
+    # Log incoming request
+    logger.info(f"🌐 Incoming request: {request.method} {request.url}")
+    logger.info(f"📍 Client IP: {request.client.host if request.client else 'unknown'}")
+    logger.info(f"🔗 Headers: {dict(request.headers)}")
+    
+    # Process request
+    response = await call_next(request)
+    
+    # Log response
+    process_time = time.time() - start_time
+    logger.info(f"✅ Response: {response.status_code} - {process_time:.3f}s")
+    
+    return response
  
 # CORS configuration for frontend domain
 app.add_middleware(
@@ -92,12 +117,32 @@ admin.add_view(NotificationAdmin)
  
 @app.get("/", tags=["Root"])
 def read_root():
+    logger.info("🏠 Root endpoint accessed")
     return {"message": "Price Comparison API is running!"}
  
 @app.get("/health", tags=["Health"])
 def health():
-    # simple DB liveness check
-    from app.db.session import engine as db_engine
-    with db_engine.connect() as conn:
-        conn.execute(text("SELECT 1"))
-    return {"status": "ok"}
+    logger.info("🏥 Health check endpoint accessed")
+    try:
+        # simple DB liveness check
+        from app.db.session import engine as db_engine
+        with db_engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        logger.info("✅ Health check passed - database connected")
+        return {"status": "ok", "database": "connected"}
+    except Exception as e:
+        logger.error(f"❌ Health check failed - database error: {str(e)}")
+        return {"status": "error", "database": "disconnected", "error": str(e)}
+
+@app.get("/debug", tags=["Debug"])
+def debug_info():
+    logger.info("🔍 Debug endpoint accessed")
+    return {
+        "cors_origins": [
+            "https://ashy-stone-06e190203.2.azurestaticapps.net",
+            "http://localhost:4200",
+            "https://localhost:4200"
+        ],
+        "app_title": "Price Comparison API",
+        "environment": "production"
+    }
