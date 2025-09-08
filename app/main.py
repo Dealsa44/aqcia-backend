@@ -14,16 +14,12 @@ from app.db.session import engine  # engine uses env DATABASE_URL with sslmode=r
  
 app = FastAPI(title="Price Comparison API")
  
-# CORS configuration for frontend domains
+# Relaxed CORS for now — after it works, replace "*" with your SWA domain
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://ashy-stone-06e190203.2.azurestaticapps.net",  # Production frontend
-        "http://localhost:4200",  # Local development
-        "https://localhost:4200"  # Local development with HTTPS
-    ],
+    allow_origins=["*"],          # TODO: ["https://<your-swa>.azurestaticapps.net"]
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
  
