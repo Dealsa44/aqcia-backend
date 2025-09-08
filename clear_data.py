@@ -37,4 +37,6 @@ def clear_all_data():
         db.close()
 
 if __name__ == "__main__":
+
     clear_all_data() 
+    
