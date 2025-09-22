@@ -39,11 +39,12 @@ async def log_requests(request: Request, call_next):
     
     return response
  
-# CORS configuration for frontend domain
+# CORS configuration for frontend domains
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://ashy-stone-06e190203.2.azurestaticapps.net",
+        "https://aqci.ge",  # Custom domain
+        "https://ashy-stone-06e190203.2.azurestaticapps.net",  # Azure Static Web App
         "http://localhost:4200",  # for local development
         "https://localhost:4200"  # for local development with HTTPS
     ],
